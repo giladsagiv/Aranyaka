@@ -1,0 +1,62 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+import { urlFor } from '../utils/image';
+import { useTranslations } from '../i18n/utils';
+import type { Artwork } from '../sanity/types';
+
+const t = useTranslations();
+
+// order(orderRank) = the drag-and-drop order set in the Studio
+const artworks = await sanityClient.fetch<Artwork[]>(`
+  *[_type == "artwork"] | order(orderRank) {
+    title, image, altText, year, medium, "slug": slug.current
+  }
+`);
+---
+<Layout title={t('site.title')}>
+  <header><h1>{t('home.heading')}</h1></header>
+  <main class="gallery-grid">
+    {artworks.map((art) => {
+      const base = urlFor(art.image).auto('format');
+      return (
+        <a class="card" href={`/artwork/${art.slug}`}>
+          <img
+            src={base.width(600).url()}
+            srcset={`${base.width(400).url()} 400w,
+                     ${base.width(800).url()} 800w,
+                     ${base.width(1200).url()} 1200w`}
+            sizes="(max-width: 640px) 100vw,
+                   (max-width: 1024px) 50vw, 33vw"
+            alt={art.altText}
+            loading="lazy"
+            decoding="async"
+          />
+          <h2>{art.title}</h2>
+          <p>{art.medium}{art.year ? `, ${art.year}` : ''}</p>
+        </a>
+      );
+    })}
+  </main>
+</Layout>
+<style>
+  header { max-width: 1200px; margin: 0 auto 60px; text-align: center; }
+  h1 { font-weight: 300; font-size: 2.5rem; letter-spacing: -1px; }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 40px;
+    align-items: start; /* rows top-align; heights stay natural */
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card { text-decoration: none; color: inherit; }
+  .card img {
+    width: 100%;
+    height: auto; /* natural aspect ratio - no crop */
+    display: block;
+    background-color: #eae6e0;
+  }
+  .card h2 { font-size: 1.1rem; font-weight: 400; margin: 15px 0 5px; }
+  .card p { font-size: 0.9rem; color: #6e6963; margin: 0; }
+</style>
