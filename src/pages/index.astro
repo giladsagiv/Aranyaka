@@ -10,22 +10,22 @@ const about: AboutPage | null = await sanityClient.fetch(`
 ---
 <Layout title={about?.artistName}>
   <main class:list={['hero', { 'has-image': !!about?.homeImage }]}>
-    <div class="intro">
-      {about?.artistName && <h1>{about.artistName}</h1>}
-      {about?.tagline && <p class="tagline">{about.tagline}</p>}
-    </div>
     {about?.homeImage && (
       <img
-        class="side-image"
+        class="hero-image"
         src={urlFor(about.homeImage).width(900).auto('format').url()}
         srcset={`${urlFor(about.homeImage).width(600).auto('format').url()} 600w,
                  ${urlFor(about.homeImage).width(900).auto('format').url()} 900w,
                  ${urlFor(about.homeImage).width(1200).auto('format').url()} 1200w`}
-        sizes="(max-width: 768px) 100vw, 42vw"
+        sizes="(max-width: 768px) 100vw, 50vw"
         alt={about.homeImage.altText || about?.artistName || ''}
         decoding="async"
       />
     )}
+    <div class="intro">
+      {about?.artistName && <h1>{about.artistName}</h1>}
+      {about?.tagline && <p class="tagline">{about.tagline}</p>}
+    </div>
   </main>
 </Layout>
 <style is:global>
@@ -51,15 +51,15 @@ const about: AboutPage | null = await sanityClient.fetch(`
     width: 100%;
     margin: 0 auto;
     padding-top: 0;
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 60px;
-    align-items: start; /* name top-aligns with the image */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
   }
   h1 {
-    font-size: 29px;
+    font-size: 21px;
     font-weight: 300;
-    line-height: 1.15; /* trims leading so the name sits level with the image top */
+    line-height: 1.15;
     letter-spacing: 0.3em;
     text-transform: uppercase;
     color: #1e1e1e;
@@ -72,26 +72,20 @@ const about: AboutPage | null = await sanityClient.fetch(`
     font-style: italic;
     color: #9a9a9a;
   }
-  .side-image {
+  .hero-image {
     display: block;
     width: auto;
     height: auto;
-    /* half size within its column; the column ratio itself is unchanged */
-    max-width: 50%;
+    max-width: 62.5%; /* 25% larger than the previous 50% */
     /* keeps the whole page inside one screen; shrinks with the window */
-    max-height: calc((100vh - 280px) / 2);
-    justify-self: center;
+    max-height: calc((100vh - 300px) * 0.625);
     background-color: #f4f4f4;
   }
   @media (max-width: 768px) {
-    .hero.has-image {
-      grid-template-columns: 1fr;
-      gap: 32px;
-    }
-    /* stacked on phones, so the half-size rule above would leave it tiny */
-    .side-image {
+    .hero.has-image { gap: 28px; }
+    .hero-image {
       max-width: 100%;
-      max-height: 55vh;
+      max-height: 45vh;
     }
   }
 </style>
