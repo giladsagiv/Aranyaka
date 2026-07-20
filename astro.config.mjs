@@ -13,6 +13,50 @@ import sanity from '@sanity/astro';
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
+  vite: {
+    optimizeDeps: {
+      // Pre-bundle the full Studio tree at startup. Without this, dev-mode
+      // lazy discovery re-optimizes mid-session and open Studio tabs hit
+      // "504 Outdated Optimize Dep" on every newly visited screen.
+      include: [
+        'sanity',
+        'sanity/structure',
+        'sanity/router',
+        '@sanity/orderable-document-list',
+        // React must be pre-bundled in the same pass as the Studio, or a later
+        // re-optimize can pair the Studio with React's production build and the
+        // dev JSX runtime disappears ("_jsxDEV is not a function" at /admin).
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-is',
+        'styled-components',
+        // Lazily imported by the Studio's code editor. Left to on-demand
+        // discovery they trigger a late re-optimize, which renames every
+        // chunk and breaks whatever Studio tabs are already open.
+        'react-refractor',
+        'refractor/bash',
+        'refractor/javascript',
+        'refractor/json',
+        'refractor/jsx',
+        'refractor/typescript',
+      ],
+    },
+    // Replaces the react/styled-components deduping the disabled plugin did:
+    // one copy of each, shared by the Studio and Astro's React islands.
+    resolve: {
+      dedupe: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react-is',
+        'styled-components',
+        '@sanity/ui',
+      ],
+    },
+  },
   integrations: [
     sanity({
       projectId: '369t4bp9',

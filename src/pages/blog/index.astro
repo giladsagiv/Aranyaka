@@ -1,0 +1,106 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+import { urlFor } from '../../utils/image';
+import { useTranslations } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/ui';
+import type { Post } from '../../sanity/types';
+
+const t = useTranslations();
+
+const posts: Post[] = await sanityClient.fetch(`
+  *[_type == "post" && defined(slug.current)] | order(publishedAt desc) {
+    title, publishedAt, videoUrl, coverImage, excerpt, body,
+    "slug": slug.current
+  }
+`);
+
+// falls back to the opening of the text when no summary was written
+const summaryOf = (post: Post) => {
+  if (post.excerpt) return post.excerpt;
+  const first = (post.body || '').split(/\n\s*\n/)[0]?.trim() || '';
+  return first.length > 220 ? `${first.slice(0, 220).trimEnd()}…` : first;
+};
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString(defaultLang, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+---
+<Layout title={t('nav.blog')}>
+  <link
+    slot="head"
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <main class="posts">
+    {posts.length === 0 && <p class="empty">{t('blog.empty')}</p>}
+    {posts.map((post) => (
+      <article class="post">
+        <a href={`/blog/${post.slug}`}>
+          {post.coverImage && (
+            <img
+              src={urlFor(post.coverImage).width(1200).height(600).fit('crop').auto('format').url()}
+              alt={post.coverImage.altText || post.title}
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          <p class="meta">
+            <span>{formatDate(post.publishedAt)}</span>
+            {post.videoUrl && <span class="tag">{t('blog.video')}</span>}
+          </p>
+          <h2>{post.title}</h2>
+          {summaryOf(post) && <p class="excerpt">{summaryOf(post)}</p>}
+        </a>
+      </article>
+    ))}
+  </main>
+</Layout>
+<style>
+  .posts { max-width: 720px; margin: 0 auto; }
+  .empty { text-align: center; color: #9a9a9a; }
+  .post { margin-bottom: 72px; }
+  .post a { text-decoration: none; color: inherit; display: block; }
+  .post img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 22px;
+    background-color: #f4f4f4;
+    transition: opacity 0.2s ease;
+  }
+  .post a:hover img { opacity: 0.88; }
+  .meta {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: #9a9a9a;
+    margin: 0 0 8px;
+  }
+  .tag {
+    text-transform: lowercase;
+    letter-spacing: 0.12em;
+    color: #1a1a1a;
+    opacity: 0.45;
+  }
+  h2 {
+    font-size: 21px;
+    font-weight: 400;
+    color: #1e1e1e;
+    text-align: center;
+    margin: 0 0 12px;
+  }
+  .excerpt {
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    font-size: 17px;
+    line-height: 1.9;
+    color: #4f4f4f;
+    text-align: center;
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,127 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+import { urlFor } from '../utils/image';
+import { useTranslations } from '../i18n/utils';
+import type { Artwork, Category } from '../sanity/types';
+
+const t = useTranslations();
+
+// category drag-order = filter button order
+const categories: Category[] = await sanityClient.fetch(`
+  *[_type == "category"] | order(orderRank) { _id, title }
+`);
+
+// one flat grid in the global artwork drag-order
+const artworks: Artwork[] = await sanityClient.fetch(`
+  *[_type == "artwork"] | order(orderRank) {
+    title, image, altText, "slug": slug.current, "categoryId": category._ref
+  }
+`);
+---
+<Layout title={t('nav.gallery')}>
+  <main>
+    {categories.length > 0 && (
+      <nav class="filter-nav" aria-label="Category filter">
+        <button class="filter-btn" data-filter="all" aria-pressed="true">{t('filter.all')}</button>
+        {categories.map((cat) => (
+          <>
+            <span class="separator" aria-hidden="true">/</span>
+            <button class="filter-btn" data-filter={cat._id} aria-pressed="false">{cat.title}</button>
+          </>
+        ))}
+      </nav>
+    )}
+    <div class="gallery-grid">
+      {artworks.map((art) => {
+        const base = urlFor(art.image).auto('format');
+        return (
+          <a class="card" href={`/artwork/${art.slug}`} data-category={art.categoryId}>
+            <img
+              src={base.width(600).height(600).fit('crop').url()}
+              srcset={`${base.width(400).height(400).fit('crop').url()} 400w,
+                       ${base.width(600).height(600).fit('crop').url()} 600w,
+                       ${base.width(800).height(800).fit('crop').url()} 800w`}
+              sizes="(max-width: 640px) 100vw,
+                     (max-width: 1024px) 50vw, 33vw"
+              alt={art.altText}
+              loading="lazy"
+              decoding="async"
+            />
+            <p class="caption">{art.title}</p>
+          </a>
+        );
+      })}
+    </div>
+  </main>
+</Layout>
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const cards = document.querySelectorAll<HTMLElement>('.gallery-grid .card');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      cards.forEach((card) => {
+        card.style.display =
+          filter === 'all' || card.dataset.category === filter ? '' : 'none';
+      });
+    });
+  });
+</script>
+<style>
+  main { max-width: 1080px; margin: 0 auto; }
+  .filter-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin: 0 0 48px;
+  }
+  .filter-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.85rem;
+    text-transform: lowercase;
+    letter-spacing: 0.12em;
+    color: #1a1a1a;
+    opacity: 0.4; /* non-active links are muted */
+    transition: opacity 0.2s ease;
+  }
+  .filter-btn:hover,
+  .filter-btn[aria-pressed='true'] {
+    opacity: 1;
+  }
+  .separator {
+    font-size: 0.85rem;
+    color: #1a1a1a;
+    opacity: 0.2;
+    user-select: none;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 36px 20px;
+  }
+  .card { text-decoration: none; color: inherit; }
+  .card img {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* uniform squares; crop follows the Studio hotspot */
+    object-fit: cover;
+    display: block;
+    background-color: #f4f4f4;
+    transition: opacity 0.2s ease;
+  }
+  .card:hover img { opacity: 0.88; }
+  .caption {
+    font-size: 14px;
+    color: #696969;
+    text-align: center;
+    margin: 10px 0 0;
+  }
+</style>

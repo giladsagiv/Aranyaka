@@ -1,26 +1,110 @@
 ---
 import { defaultLang, dirs } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
 
-interface Props { title: string }
+interface Props {
+  title?: string;
+}
 const { title } = Astro.props;
+const t = useTranslations();
+
+const siteName = t('site.title');
+const pageTitle = title ? `${title} · ${siteName}` : siteName;
+const year = new Date().getFullYear();
+const path = Astro.url.pathname;
 ---
 <!doctype html>
 <html lang={defaultLang} dir={dirs[defaultLang]}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48 64x64" />
+    <link rel="icon" href="/icon.png" type="image/png" sizes="512x512" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <slot name="head" />
+    <title>{pageTitle}</title>
   </head>
   <body>
+    <header class="site-header">
+      <a class="wordmark" href="/">{siteName}</a>
+      <nav class="site-nav">
+        <a href="/" aria-current={path === '/' ? 'page' : undefined}>
+          {t('nav.home')}
+        </a>
+        <a href="/gallery" aria-current={path.startsWith('/gallery') || path.startsWith('/artwork') ? 'page' : undefined}>
+          {t('nav.gallery')}
+        </a>
+        <a href="/blog" aria-current={path.startsWith('/blog') ? 'page' : undefined}>
+          {t('nav.blog')}
+        </a>
+        <a href="/about" aria-current={path.startsWith('/about') ? 'page' : undefined}>
+          {t('nav.about')}
+        </a>
+        <a href="/contact" aria-current={path.startsWith('/contact') ? 'page' : undefined}>
+          {t('nav.contact')}
+        </a>
+      </nav>
+    </header>
     <slot />
+    <footer class="site-footer">
+      © {year} {siteName}
+    </footer>
   </body>
 </html>
 <style is:global>
   body {
-    font-family: system-ui, sans-serif;
-    background-color: #faf8f5;
-    color: #1c1b1a;
+    font-family: 'Open Sans', system-ui, sans-serif;
+    font-weight: 300;
+    font-size: 15px;
+    line-height: 1.8;
+    background-color: #ffffff;
+    color: #696969;
     margin: 0;
-    padding: 40px 20px;
+    padding: 0 20px;
+  }
+  .site-header {
+    text-align: center;
+    padding: 56px 0 0;
+  }
+  .wordmark {
+    font-size: 19px;
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    text-decoration: none;
+  }
+  .site-nav {
+    display: flex;
+    justify-content: center;
+    gap: 36px;
+    margin: 28px 0 44px;
+  }
+  .site-nav a {
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    color: #9a9a9a;
+    text-decoration: none;
+    padding-bottom: 3px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s ease;
+  }
+  .site-nav a:hover { color: #1e1e1e; }
+  .site-nav a[aria-current='page'] {
+    color: #1e1e1e;
+    border-bottom-color: #1e1e1e;
+  }
+  .site-footer {
+    text-align: center;
+    margin-top: 96px;
+    padding: 40px 0;
+    font-size: 13px;
+    color: #9a9a9a;
   }
 </style>

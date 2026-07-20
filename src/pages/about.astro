@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+import { useTranslations } from '../i18n/utils';
+import type { AboutPage } from '../sanity/types';
+
+const t = useTranslations();
+
+const about: AboutPage | null = await sanityClient.fetch(`
+  *[_type == "aboutPage"][0] { body }
+`);
+const paragraphs = (about?.body || '')
+  .split(/\n\s*\n/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+---
+<Layout title={t('nav.about')}>
+  <link
+    slot="head"
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <main class="about">
+    {paragraphs.map((p) => <p>{p}</p>)}
+  </main>
+</Layout>
+<style>
+  .about {
+    max-width: 640px;
+    margin: 24px auto 0;
+  }
+  .about p {
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    font-size: 18px;
+    line-height: 2.05;
+    color: #4f4f4f;
+    margin: 0 0 1.6em;
+  }
+</style>

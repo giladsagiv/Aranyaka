@@ -14,13 +14,45 @@ export default defineConfig({
         S.list()
           .title('Content')
           .items([
-            // drag-and-drop ordered list of artworks
+            // fixed singleton for the about page / site identity
+            S.listItem()
+              .title('About Page')
+              .id('aboutPage')
+              .child(
+                S.document().schemaType('aboutPage').documentId('aboutPage'),
+              ),
+            S.listItem()
+              .title('Contact Page')
+              .id('contactPage')
+              .child(
+                S.document().schemaType('contactPage').documentId('contactPage'),
+              ),
+            S.divider(),
+            // drag-and-drop ordered lists; drag order = site order
+            orderableDocumentListDeskItem({
+              type: 'category',
+              title: 'Categories',
+              S,
+              context,
+            }),
             orderableDocumentListDeskItem({
               type: 'artwork',
               title: 'Artworks',
               S,
               context,
             }),
+            S.divider(),
+            // chronological, newest first — no manual ordering needed
+            S.listItem()
+              .title('Blog / Vlog Posts')
+              .schemaType('post')
+              .child(
+                S.documentTypeList('post')
+                  .title('Blog / Vlog Posts')
+                  .defaultOrdering([
+                    { field: 'publishedAt', direction: 'desc' },
+                  ]),
+              ),
           ]),
     }),
   ],

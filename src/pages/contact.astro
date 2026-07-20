@@ -1,0 +1,48 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+import { useTranslations } from '../i18n/utils';
+import type { ContactPage } from '../sanity/types';
+
+const t = useTranslations();
+
+const contact: ContactPage | null = await sanityClient.fetch(`
+  *[_type == "contactPage"][0] { intro, email, instagram }
+`);
+const paragraphs = (contact?.intro || '')
+  .split(/\n\s*\n/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+---
+<Layout title={t('nav.contact')}>
+  <main class="contact">
+    {paragraphs.map((p) => <p>{p}</p>)}
+    {contact?.email && (
+      <p class="link-line"><a href={`mailto:${contact.email}`}>{contact.email}</a></p>
+    )}
+    {contact?.instagram && (
+      <p class="link-line">
+        <a href={contact.instagram} target="_blank" rel="noopener noreferrer">
+          {t('contact.instagram')}
+        </a>
+      </p>
+    )}
+  </main>
+</Layout>
+<style>
+  .contact {
+    max-width: 560px;
+    margin: 24px auto 0;
+    text-align: center;
+  }
+  .contact p { margin: 0 0 1.4em; }
+  .link-line { margin: 0 0 0.6em; }
+  .contact a {
+    color: #1e1e1e;
+    text-decoration: none;
+    border-bottom: 1px solid #d8d8d8;
+    padding-bottom: 2px;
+    transition: border-color 0.15s ease;
+  }
+  .contact a:hover { border-bottom-color: #1e1e1e; }
+</style>
