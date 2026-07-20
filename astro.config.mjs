@@ -10,6 +10,25 @@ process.env.SANITY_ASTRO_DISABLE_MODULE_DEDUPE = '1';
 import react from '@astrojs/react';
 import sanity from '@sanity/astro';
 
+// `astro build` and `astro dev` share Vite's dependency cache by default, so a
+// build wipes the pre-bundled chunks the running dev server is still handing
+// out — an open Studio tab then 504s ("Outdated Optimize Dep") on anything it
+// loads lazily. Give the build its own cache directory instead.
+/** @type {import('astro').AstroIntegration} */
+const separateBuildDepCache = {
+  name: 'separate-build-dep-cache',
+  hooks: {
+    'astro:config:setup': ({ command, updateConfig }) => {
+      updateConfig({
+        vite: {
+          cacheDir:
+            command === 'build' ? 'node_modules/.vite-build' : 'node_modules/.vite',
+        },
+      });
+    },
+  },
+};
+
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
@@ -58,6 +77,7 @@ export default defineConfig({
     },
   },
   integrations: [
+    separateBuildDepCache,
     sanity({
       projectId: '369t4bp9',
       dataset: 'production',
