@@ -14,7 +14,6 @@ export const ui = {
     'blog.empty': 'Nothing here yet.',
     'blog.watch': 'Watch the video',
     'contact.instagram': 'Instagram',
-    'filter.all': 'All',
     'artwork.back': '← Back to collection',
     'artwork.sold': 'Sold',
   },

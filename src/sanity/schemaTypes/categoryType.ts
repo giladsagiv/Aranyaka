@@ -24,7 +24,7 @@ export const categoryType = defineType({
       title: 'Open the gallery on this category',
       type: 'boolean',
       description:
-        'The gallery starts filtered to this category. Tick it on one category only — if none is ticked, the gallery opens on "All".',
+        'The gallery starts on this category. Tick it on one category only — if none is ticked, the first category in this list is used.',
       initialValue: false,
     }),
   ],

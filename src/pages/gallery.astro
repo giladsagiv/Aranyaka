@@ -12,8 +12,10 @@ const categories: Category[] = await sanityClient.fetch(`
   *[_type == "category"] | order(orderRank) { _id, title, isDefault }
 `);
 
-// the gallery opens on this filter; "all" unless a category is marked default
-const activeFilter = categories.find((cat) => cat.isDefault)?._id ?? 'all';
+// the gallery always has one category selected: the one marked default,
+// otherwise the first in drag order. null only when no categories exist.
+const activeFilter =
+  categories.find((cat) => cat.isDefault)?._id ?? categories[0]?._id ?? null;
 
 // one flat grid in the global artwork drag-order
 const artworks: Artwork[] = await sanityClient.fetch(`
@@ -26,16 +28,9 @@ const artworks: Artwork[] = await sanityClient.fetch(`
   <main>
     {categories.length > 0 && (
       <nav class="filter-nav" aria-label="Category filter">
-        <button
-          class="filter-btn"
-          data-filter="all"
-          aria-pressed={activeFilter === 'all' ? 'true' : 'false'}
-        >
-          {t('filter.all')}
-        </button>
-        {categories.map((cat) => (
+        {categories.map((cat, i) => (
           <>
-            <span class="separator" aria-hidden="true">/</span>
+            {i > 0 && <span class="separator" aria-hidden="true">/</span>}
             <button
               class="filter-btn"
               data-filter={cat._id}
@@ -55,7 +50,7 @@ const artworks: Artwork[] = await sanityClient.fetch(`
             class="card"
             href={`/artwork/${art.slug}`}
             data-category={art.categoryId}
-            style={activeFilter !== 'all' && art.categoryId !== activeFilter
+            style={activeFilter && art.categoryId !== activeFilter
               ? 'display: none'
               : undefined}
           >
@@ -85,8 +80,7 @@ const artworks: Artwork[] = await sanityClient.fetch(`
       const filter = btn.dataset.filter;
       buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
       cards.forEach((card) => {
-        card.style.display =
-          filter === 'all' || card.dataset.category === filter ? '' : 'none';
+        card.style.display = card.dataset.category === filter ? '' : 'none';
       });
     });
   });
