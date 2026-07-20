@@ -7,7 +7,10 @@ import type { AboutPage } from '../sanity/types';
 const t = useTranslations();
 
 const about: AboutPage | null = await sanityClient.fetch(`
-  *[_type == "aboutPage"][0] { body }
+  *[_type == "aboutPage"][0] {
+    openingQuote, quoteAttribution, body,
+    "cvUrl": cvFile.asset->url
+  }
 `);
 const paragraphs = (about?.body || '')
   .split(/\n\s*\n/)
@@ -21,7 +24,18 @@ const paragraphs = (about?.body || '')
     rel="stylesheet"
   />
   <main class="about">
+    {about?.openingQuote && (
+      <blockquote class="epigraph">
+        <p>{about.openingQuote}</p>
+        {about.quoteAttribution && <cite>— {about.quoteAttribution}</cite>}
+      </blockquote>
+    )}
     {paragraphs.map((p) => <p>{p}</p>)}
+    {about?.cvUrl && (
+      <p class="cv">
+        <a href={about.cvUrl} target="_blank" rel="noopener" download>{t('about.cv')}</a>
+      </p>
+    )}
   </main>
 </Layout>
 <style>
@@ -35,5 +49,47 @@ const paragraphs = (about?.body || '')
     line-height: 2.05;
     color: #4f4f4f;
     margin: 0 0 1.6em;
+  }
+  .epigraph {
+    margin: 0 0 2.4em;
+    padding: 0;
+    border: 0;
+    text-align: center;
+  }
+  .epigraph p {
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.6;
+    color: #3d3d3d;
+    margin: 0;
+  }
+  .epigraph cite {
+    display: block;
+    margin-top: 0.8em;
+    font-family: 'Open Sans', system-ui, sans-serif;
+    font-style: normal;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: #8a8a8a;
+  }
+  .cv {
+    text-align: center;
+    margin: 2.4em 0 0;
+  }
+  .cv a {
+    display: inline-block;
+    padding: 12px 26px;
+    border: 1px solid #1e1e1e;
+    font-family: 'Open Sans', system-ui, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .cv a:hover {
+    background-color: #1e1e1e;
+    color: #ffffff;
   }
 </style>

@@ -36,6 +36,10 @@ const formatDate = (value: string) =>
     rel="stylesheet"
   />
   <main class="posts">
+    <div class="journal-head">
+      <h1>{t('journal.title')}</h1>
+      <p>{t('journal.subtitle')}</p>
+    </div>
     {posts.length === 0 && <p class="empty">{t('blog.empty')}</p>}
     {posts.map((post) => (
       <article class="post">
@@ -61,6 +65,24 @@ const formatDate = (value: string) =>
 </Layout>
 <style>
   .posts { max-width: 720px; margin: 0 auto; }
+  .journal-head {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+  .journal-head h1 {
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: #1e1e1e;
+    margin: 0;
+  }
+  .journal-head p {
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: #6a6a6a;
+    margin: 12px 0 0;
+  }
   .empty { text-align: center; color: #9a9a9a; }
   .post { margin-bottom: 72px; }
   .post a { text-decoration: none; color: inherit; display: block; }

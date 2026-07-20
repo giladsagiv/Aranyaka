@@ -9,6 +9,7 @@ const { title } = Astro.props;
 const t = useTranslations();
 
 const siteName = t('site.title');
+const artistName = t('site.artist');
 const pageTitle = title ? `${title} · ${siteName}` : siteName;
 const year = new Date().getFullYear();
 const path = Astro.url.pathname;
@@ -32,7 +33,9 @@ const path = Astro.url.pathname;
   </head>
   <body>
     <header class="site-header">
-      <a class="wordmark" href="/">{siteName}</a>
+      <a class="brand" href="/">
+        <span class="brand-name">{artistName}</span>
+      </a>
       <nav class="site-nav">
         <a href="/" aria-current={path === '/' ? 'page' : undefined}>
           {t('nav.home')}
@@ -72,13 +75,18 @@ const path = Astro.url.pathname;
     text-align: center;
     padding: 56px 0 0;
   }
-  .wordmark {
-    font-size: 33px;
+  .brand {
+    display: inline-block;
+    text-decoration: none;
+  }
+  .brand-name {
+    display: block;
+    font-size: clamp(22px, 5vw, 32px);
     font-weight: 300;
-    letter-spacing: 0.35em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: #1e1e1e;
-    text-decoration: none;
+    line-height: 1.1;
   }
   .site-nav {
     display: flex;
@@ -88,8 +96,9 @@ const path = Astro.url.pathname;
   }
   .site-nav a {
     font-size: 14px;
+    font-weight: 400;
     letter-spacing: 0.06em;
-    color: #9a9a9a;
+    color: #444;
     text-decoration: none;
     padding-bottom: 3px;
     border-bottom: 1px solid transparent;

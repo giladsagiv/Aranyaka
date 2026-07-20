@@ -22,7 +22,10 @@ export interface Category {
 export interface AboutPage {
   artistName?: string
   tagline?: string
+  openingQuote?: string
+  quoteAttribution?: string
   body?: string
+  cvUrl?: string
   homeImage?: { altText?: string } & Record<string, any>
 }
 
