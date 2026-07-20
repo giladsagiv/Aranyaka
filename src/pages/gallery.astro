@@ -9,8 +9,11 @@ const t = useTranslations();
 
 // category drag-order = filter button order
 const categories: Category[] = await sanityClient.fetch(`
-  *[_type == "category"] | order(orderRank) { _id, title }
+  *[_type == "category"] | order(orderRank) { _id, title, isDefault }
 `);
+
+// the gallery opens on this filter; "all" unless a category is marked default
+const activeFilter = categories.find((cat) => cat.isDefault)?._id ?? 'all';
 
 // one flat grid in the global artwork drag-order
 const artworks: Artwork[] = await sanityClient.fetch(`
@@ -23,11 +26,23 @@ const artworks: Artwork[] = await sanityClient.fetch(`
   <main>
     {categories.length > 0 && (
       <nav class="filter-nav" aria-label="Category filter">
-        <button class="filter-btn" data-filter="all" aria-pressed="true">{t('filter.all')}</button>
+        <button
+          class="filter-btn"
+          data-filter="all"
+          aria-pressed={activeFilter === 'all' ? 'true' : 'false'}
+        >
+          {t('filter.all')}
+        </button>
         {categories.map((cat) => (
           <>
             <span class="separator" aria-hidden="true">/</span>
-            <button class="filter-btn" data-filter={cat._id} aria-pressed="false">{cat.title}</button>
+            <button
+              class="filter-btn"
+              data-filter={cat._id}
+              aria-pressed={activeFilter === cat._id ? 'true' : 'false'}
+            >
+              {cat.title}
+            </button>
           </>
         ))}
       </nav>
@@ -36,7 +51,14 @@ const artworks: Artwork[] = await sanityClient.fetch(`
       {artworks.map((art) => {
         const base = urlFor(art.image).auto('format');
         return (
-          <a class="card" href={`/artwork/${art.slug}`} data-category={art.categoryId}>
+          <a
+            class="card"
+            href={`/artwork/${art.slug}`}
+            data-category={art.categoryId}
+            style={activeFilter !== 'all' && art.categoryId !== activeFilter
+              ? 'display: none'
+              : undefined}
+          >
             <img
               src={base.width(600).height(600).fit('crop').url()}
               srcset={`${base.width(400).height(400).fit('crop').url()} 400w,

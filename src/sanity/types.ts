@@ -16,6 +16,7 @@ export interface Artwork {
 export interface Category {
   _id: string
   title: string
+  isDefault?: boolean
 }
 
 export interface AboutPage {

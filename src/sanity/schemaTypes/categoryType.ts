@@ -16,8 +16,16 @@ export const categoryType = defineType({
       name: 'title',
       title: 'Category Name',
       type: 'string',
-      description: 'Shown as a section heading on the site, e.g. "Scrolls", "Paintings".',
+      description: 'Shown as a filter on the gallery page, e.g. "Scrolls", "Paintings".',
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'isDefault',
+      title: 'Open the gallery on this category',
+      type: 'boolean',
+      description:
+        'The gallery starts filtered to this category. Tick it on one category only — if none is ticked, the gallery opens on "All".',
+      initialValue: false,
     }),
   ],
 })
