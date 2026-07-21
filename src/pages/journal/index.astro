@@ -29,7 +29,7 @@ const formatDate = (value: string) =>
     day: 'numeric',
   });
 ---
-<Layout title={t('nav.blog')}>
+<Layout title={t('nav.journal')}>
   <link
     slot="head"
     href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
@@ -40,7 +40,7 @@ const formatDate = (value: string) =>
       <h1>{t('journal.title')}</h1>
       <p>{t('journal.subtitle')}</p>
     </div>
-    {posts.length === 0 && <p class="empty">{t('blog.empty')}</p>}
+    {posts.length === 0 && <p class="empty">{t('journal.empty')}</p>}
     {posts.map((post) => (
       <article class="post">
         <a href={`/journal/${post.slug}`}>
@@ -54,7 +54,7 @@ const formatDate = (value: string) =>
           )}
           <p class="meta">
             <span>{formatDate(post.publishedAt)}</span>
-            {post.videoUrl && <span class="tag">{t('blog.video')}</span>}
+            {post.videoUrl && <span class="tag">{t('journal.video')}</span>}
           </p>
           <h2>{post.title}</h2>
           {summaryOf(post) && <p class="excerpt">{summaryOf(post)}</p>}
