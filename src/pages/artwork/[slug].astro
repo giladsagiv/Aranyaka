@@ -9,8 +9,9 @@ export async function getStaticPaths() {
   const artworks = await sanityClient.fetch<Artwork[]>(`
     *[_type == "artwork" && defined(slug.current)] {
       title, image, altText, dimensions, year, medium, price, sold,
-      description, extraImages,
-      "slug": slug.current
+      description, extraImages, provenance, printsAvailable,
+      "slug": slug.current,
+      "journalSlug": journalPost->slug.current
     }
   `);
   return artworks.map((art) => ({
@@ -37,7 +38,14 @@ const priceLine = art.sold ? t('artwork.sold') : art.price;
       <h1>{art.title}</h1>
       {meta && <p class="meta">{meta}</p>}
       {priceLine && <p class="price">{priceLine}</p>}
+      {art.provenance && <p class="provenance">{art.provenance}</p>}
+      {art.printsAvailable && <p class="prints">Fine Art Prints available</p>}
       {art.description && <p class="desc">{art.description}</p>}
+      {art.journalSlug && (
+        <p class="journal-link">
+          <a href={`/journal/${art.journalSlug}`}>Read the story behind this piece in the Journal →</a>
+        </p>
+      )}
     </div>
     {art.extraImages && art.extraImages.length > 0 && (
       <div class="extra">
@@ -73,6 +81,24 @@ const priceLine = art.sold ? t('artwork.sold') : art.price;
   }
   .meta { font-size: 14px; margin: 0 0 4px; }
   .price { font-size: 14px; color: #1e1e1e; margin: 0; }
+  .provenance { font-size: 14px; color: #696969; margin: 6px 0 0; }
+  .prints {
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: #1e1e1e;
+    margin: 8px 0 0;
+  }
+  .journal-link { margin: 28px 0 0; }
+  .journal-link a {
+    font-size: 13px;
+    letter-spacing: 0.07em;
+    color: #1e1e1e;
+    text-decoration: none;
+    border-bottom: 1px solid #d8d8d8;
+    padding-bottom: 2px;
+    transition: border-color 0.15s ease;
+  }
+  .journal-link a:hover { border-bottom-color: #1e1e1e; }
   .desc {
     max-width: 620px;
     margin: 24px auto 0;

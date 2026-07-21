@@ -27,6 +27,12 @@ export default defineConfig({
               .child(
                 S.document().schemaType('contactPage').documentId('contactPage'),
               ),
+            S.listItem()
+              .title('Prints Page')
+              .id('printsPage')
+              .child(
+                S.document().schemaType('printsPage').documentId('printsPage'),
+              ),
             S.divider(),
             // drag-and-drop ordered lists; drag order = site order
             orderableDocumentListDeskItem({

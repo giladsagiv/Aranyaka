@@ -11,12 +11,20 @@ export interface Artwork {
   description?: string
   extraImages?: Array<{ altText?: string } & Record<string, any>>
   categoryId?: string
+  provenance?: string
+  printsAvailable?: boolean
+  printSizes?: PrintSize[]
+  journalSlug?: string
+  journalTitle?: string
 }
 
 export interface Category {
   _id: string
   title: string
   isDefault?: boolean
+  seriesTitle?: string
+  seriesSubtitle?: string
+  statement?: string
 }
 
 export interface AboutPage {
@@ -37,10 +45,30 @@ export interface Post {
   coverImage?: ({ altText?: string } & Record<string, any>) | null
   excerpt?: string
   body?: string
+  galleryLink?: {
+    _type: 'artwork' | 'category'
+    _id: string
+    title: string
+    slug?: string
+  } | null
 }
 
 export interface ContactPage {
   intro?: string
   email?: string
   instagram?: string
+}
+
+export interface PrintSize {
+  label: string
+  dimensions?: string
+  price?: string
+}
+
+export interface PrintsPage {
+  heading?: string
+  intro?: string
+  printSubtitle?: string
+  sizes?: PrintSize[]
+  details?: Array<{ label: string; text?: string }>
 }

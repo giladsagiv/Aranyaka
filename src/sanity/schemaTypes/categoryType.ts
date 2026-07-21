@@ -27,5 +27,26 @@ export const categoryType = defineType({
         'The gallery starts on this category. Tick it on one category only — if none is ticked, the first category in this list is used.',
       initialValue: false,
     }),
+    defineField({
+      name: 'seriesTitle',
+      title: 'Series Title',
+      type: 'string',
+      description:
+        'Large heading shown above this category’s grid, e.g. "Reflection of the Inner Landscape". Leave empty for no header.',
+    }),
+    defineField({
+      name: 'seriesSubtitle',
+      title: 'Series Subtitle',
+      type: 'string',
+      description: 'Smaller line under the series title, e.g. "A Wandering Journey".',
+    }),
+    defineField({
+      name: 'statement',
+      title: 'Curatorial Statement',
+      type: 'text',
+      rows: 6,
+      description:
+        'Short text shown under the series title. Separate paragraphs with an empty line.',
+    }),
   ],
 })

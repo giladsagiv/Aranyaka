@@ -1,0 +1,289 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+import { urlFor } from '../utils/image';
+import { useTranslations } from '../i18n/utils';
+import type { Artwork, PrintsPage, PrintSize } from '../sanity/types';
+
+const t = useTranslations();
+
+const page: PrintsPage | null = await sanityClient.fetch(`
+  *[_type == "printsPage"][0] {
+    heading, intro, printSubtitle,
+    sizes[]{ label, dimensions, price },
+    details[]{ label, text }
+  }
+`);
+
+const contact = await sanityClient.fetch<{ email?: string } | null>(`
+  *[_type == "contactPage"][0] { email }
+`);
+
+// grid = every artwork with "Fine Art Prints available" ticked, in gallery order
+const prints = await sanityClient.fetch<Artwork[]>(`
+  *[_type == "artwork" && printsAvailable == true] | order(orderRank) {
+    title, image, altText, "slug": slug.current,
+    printSizes[]{ label, dimensions, price }
+  }
+`);
+
+const email = contact?.email || '';
+const globalSizes: PrintSize[] = page?.sizes || [];
+const introParagraphs = (page?.intro || '')
+  .split(/\n\s*\n/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+
+// email templates live in i18n; {title}/{size} are filled per print + size
+const subjectTpl = t('prints.mailSubject');
+const bodyTpl = t('prints.mailBody');
+
+const sizeText = (s: PrintSize) => {
+  const dims = s.dimensions ? ` (${s.dimensions})` : '';
+  const price = s.price ? ` – ${s.price}` : '';
+  return `${s.label}${dims}${price}`;
+};
+
+// a ready-made mailto for one print + one chosen size; the client script just
+// swaps the order button's href to the selected size's prebuilt link
+const mailtoFor = (title: string, size: string) => {
+  const subject = subjectTpl.replace('{title}', title);
+  const body = bodyTpl.replace('{title}', title).replace('{size}', size);
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
+---
+<Layout title={t('nav.prints')}>
+  <main>
+    <header class="prints-intro">
+      {page?.heading && <h1>{page.heading}</h1>}
+      {introParagraphs.map((p) => <p>{p}</p>)}
+    </header>
+
+    <div class="prints-grid">
+      {prints.map((art, i) => {
+        const sizes = art.printSizes && art.printSizes.length > 0
+          ? art.printSizes
+          : globalSizes;
+        const base = urlFor(art.image).auto('format');
+        const firstSize = sizes[0] ? sizeText(sizes[0]) : '';
+        return (
+          <article class="print">
+            <div class="print__media">
+              <img
+                src={base.width(600).url()}
+                srcset={`${base.width(400).url()} 400w,
+                         ${base.width(600).url()} 600w,
+                         ${base.width(800).url()} 800w`}
+                sizes="(max-width: 640px) 100vw,
+                       (max-width: 1024px) 50vw, 33vw"
+                alt={art.altText}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <h2 class="print__title">{art.title}</h2>
+            {page?.printSubtitle && (
+              <p class="print__subtitle">{page.printSubtitle}</p>
+            )}
+            {sizes.length > 0 && (
+              <fieldset class="print__sizes">
+                <legend>{t('prints.selectSize')}</legend>
+                {sizes.map((s, j) => {
+                  const label = sizeText(s);
+                  return (
+                    <label class="print__size">
+                      <input
+                        type="radio"
+                        name={`size-${i}`}
+                        value={label}
+                        checked={j === 0}
+                        data-mailto={mailtoFor(art.title, label)}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+            )}
+            <a class="print__order" href={mailtoFor(art.title, firstSize)}>
+              {t('prints.order')}
+            </a>
+          </article>
+        );
+      })}
+    </div>
+
+    {page?.details && page.details.length > 0 && (
+      <section class="details">
+        <h2 class="details__heading">{t('prints.detailsHeading')}</h2>
+        <dl class="details__list">
+          {page.details.map((d) => (
+            <div class="details__row">
+              <dt>{d.label}</dt>
+              {d.text && <dd>{d.text}</dd>}
+            </div>
+          ))}
+        </dl>
+      </section>
+    )}
+  </main>
+</Layout>
+<script>
+  // each print's size radios carry a prebuilt mailto; picking one updates the
+  // order button so the email always names the selected size
+  document.querySelectorAll<HTMLElement>('.print').forEach((card) => {
+    const link = card.querySelector<HTMLAnchorElement>('.print__order');
+    if (!link) return;
+    card.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        if (radio.dataset.mailto) link.href = radio.dataset.mailto;
+      });
+    });
+  });
+</script>
+<style>
+  main { max-width: 1080px; margin: 0 auto; }
+
+  /* header */
+  .prints-intro {
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto 64px;
+  }
+  .prints-intro h1 {
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    margin: 0 0 24px;
+  }
+  .prints-intro p {
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.85;
+    letter-spacing: 0.02em;
+    color: #5a5a5a;
+    margin: 0 0 1em;
+  }
+  .prints-intro p:last-child { margin-bottom: 0; }
+
+  /* grid of print tiles */
+  .prints-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 56px 28px;
+  }
+  .print { text-align: center; }
+  .print__media img {
+    width: 100%;
+    height: auto;
+    display: block;
+    background-color: #f4f4f4;
+  }
+  .print__title {
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #1e1e1e;
+    margin: 18px 0 4px;
+  }
+  .print__subtitle {
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: #8a8a8a;
+    margin: 0 0 18px;
+  }
+
+  /* size picker */
+  .print__sizes {
+    border: 0;
+    margin: 0 auto;
+    padding: 0;
+    display: inline-block;
+    text-align: left;
+  }
+  .print__sizes legend {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #9a9a9a;
+    margin: 0 0 10px;
+    padding: 0;
+  }
+  .print__size {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    font-weight: 300;
+    color: #555;
+    cursor: pointer;
+    margin: 0 0 7px;
+  }
+  .print__size input { accent-color: #1e1e1e; margin: 0; }
+
+  /* order button */
+  .print__order {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 24px;
+    font-size: 11.5px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    text-decoration: none;
+    border: 1px solid #cfcac2;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  }
+  .print__order:hover {
+    border-color: #1e1e1e;
+    background-color: #1e1e1e;
+    color: #ffffff;
+  }
+
+  /* details & shipping box */
+  .details {
+    max-width: 720px;
+    margin: 96px auto 0;
+    padding: 40px 44px;
+    background-color: #faf9f7;
+  }
+  .details__heading {
+    text-align: center;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    margin: 0 0 28px;
+  }
+  .details__list { margin: 0; }
+  .details__row { margin: 0 0 18px; }
+  .details__row:last-child { margin-bottom: 0; }
+  .details__row dt {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    margin: 0 0 4px;
+  }
+  .details__row dd {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: #5a5a5a;
+  }
+
+  @media (max-width: 520px) {
+    .details { padding: 32px 24px; }
+  }
+</style>

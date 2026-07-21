@@ -80,6 +80,37 @@ export const artworkType = defineType({
       initialValue: false,
     }),
     defineField({
+      name: 'provenance',
+      title: 'Provenance / Collection',
+      type: 'string',
+      description:
+        'Catalog line, e.g. "Original work: Private Collection, Portugal (Gifted, 2023)".',
+    }),
+    defineField({
+      name: 'printsAvailable',
+      title: 'Fine Art Prints available',
+      type: 'boolean',
+      description: 'Shows a "Fine Art Prints available" line on the artwork.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'printSizes',
+      title: 'Print Sizes (override)',
+      type: 'array',
+      of: [{ type: 'printSize' }],
+      description:
+        'Optional — sizes/prices just for this print. Leave empty to use the default table from the Prints Page.',
+      hidden: ({ document }) => !document?.printsAvailable,
+    }),
+    defineField({
+      name: 'journalPost',
+      title: 'Linked Journal Entry',
+      type: 'reference',
+      to: [{ type: 'post' }],
+      description:
+        'Optional — links "Read the story behind this piece" to a Journal entry.',
+    }),
+    defineField({
       name: 'description',
       title: 'Artwork Description',
       type: 'text',

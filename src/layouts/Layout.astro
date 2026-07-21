@@ -34,7 +34,7 @@ const ogImage = new URL('/og-image.jpg', Astro.site).href;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Montserrat:ital,wght@0,300;0,400;0,500;1,300&display=swap"
       rel="stylesheet"
     />
     <meta name="description" content={metaDescription} />
@@ -65,6 +65,9 @@ const ogImage = new URL('/og-image.jpg', Astro.site).href;
         <a href="/gallery" aria-current={path.startsWith('/gallery') || path.startsWith('/artwork') ? 'page' : undefined}>
           {t('nav.gallery')}
         </a>
+        <a href="/prints" aria-current={path.startsWith('/prints') ? 'page' : undefined}>
+          {t('nav.prints')}
+        </a>
         <a href="/journal" aria-current={path.startsWith('/journal') ? 'page' : undefined}>
           {t('nav.journal')}
         </a>
@@ -84,14 +87,19 @@ const ogImage = new URL('/og-image.jpg', Astro.site).href;
 </html>
 <style is:global>
   body {
-    font-family: 'Open Sans', system-ui, sans-serif;
+    font-family: 'Montserrat', system-ui, sans-serif;
     font-weight: 300;
     font-size: 15px;
     line-height: 1.8;
+    letter-spacing: 0.02em;
     background-color: #ffffff;
     color: #696969;
     margin: 0;
     padding: 0 20px;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    font-weight: 400;
   }
   .site-header {
     text-align: center;

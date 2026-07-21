@@ -68,6 +68,14 @@ export const postType = defineType({
       rows: 20,
       description: 'Separate paragraphs with an empty line.',
     }),
+    defineField({
+      name: 'galleryLink',
+      title: 'Linked Gallery Work or Category',
+      type: 'reference',
+      to: [{ type: 'artwork' }, { type: 'category' }],
+      description:
+        'Optional — adds a link from this entry to a gallery artwork or category.',
+    }),
   ],
   preview: {
     select: { title: 'title', subtitle: 'publishedAt', media: 'coverImage' },

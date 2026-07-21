@@ -9,6 +9,7 @@ export const ui = {
     'home.studioTagline': 'The path of the brush: navigating mind through form, color, and the empty spaces in between',
     'nav.home': 'Home',
     'nav.gallery': 'Gallery',
+    'nav.prints': 'Prints',
     'nav.journal': 'Journal',
     'nav.about': 'About',
     'nav.contact': 'Contact',
@@ -22,6 +23,11 @@ export const ui = {
     'contact.instagram': 'Instagram',
     'artwork.back': '← Back to collection',
     'artwork.sold': 'Sold',
+    'prints.selectSize': 'Select Size',
+    'prints.order': 'Order via Email',
+    'prints.detailsHeading': 'Details & Shipping',
+    'prints.mailSubject': 'Print order — {title}',
+    'prints.mailBody': 'I\'d like to order a print of "{title}" — Size: {size}.',
   },
 } as const;
 

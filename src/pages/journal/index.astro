@@ -30,11 +30,6 @@ const formatDate = (value: string) =>
   });
 ---
 <Layout title={t('nav.journal')}>
-  <link
-    slot="head"
-    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
-    rel="stylesheet"
-  />
   <main class="posts">
     <div class="journal-head">
       <h1>{t('journal.title')}</h1>
@@ -77,7 +72,7 @@ const formatDate = (value: string) =>
     margin: 0;
   }
   .journal-head p {
-    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    font-family: 'Montserrat', system-ui, sans-serif;
     font-style: italic;
     font-size: 18px;
     color: #6a6a6a;
@@ -118,7 +113,7 @@ const formatDate = (value: string) =>
     margin: 0 0 12px;
   }
   .excerpt {
-    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    font-family: 'Montserrat', system-ui, sans-serif;
     font-size: 17px;
     line-height: 1.9;
     color: #4f4f4f;
