@@ -43,7 +43,7 @@ const formatDate = (value: string) =>
     {posts.length === 0 && <p class="empty">{t('blog.empty')}</p>}
     {posts.map((post) => (
       <article class="post">
-        <a href={`/blog/${post.slug}`}>
+        <a href={`/journal/${post.slug}`}>
           {post.coverImage && (
             <img
               src={urlFor(post.coverImage).width(1200).height(600).fit('crop').auto('format').url()}

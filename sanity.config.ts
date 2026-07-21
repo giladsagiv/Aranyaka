@@ -44,11 +44,11 @@ export default defineConfig({
             S.divider(),
             // chronological, newest first — no manual ordering needed
             S.listItem()
-              .title('Blog / Vlog Posts')
+              .title('Journal')
               .schemaType('post')
               .child(
                 S.documentTypeList('post')
-                  .title('Blog / Vlog Posts')
+                  .title('Journal')
                   .defaultOrdering([
                     { field: 'publishedAt', direction: 'desc' },
                   ]),
