@@ -1,8 +1,6 @@
 ---
-import { sanityClient } from 'sanity:client';
 import { defaultLang, dirs } from '../i18n/ui';
 import { useTranslations } from '../i18n/utils';
-import { urlFor } from '../utils/image';
 
 interface Props {
   title?: string;
@@ -19,17 +17,11 @@ const path = Astro.url.pathname;
 const metaDescription = t('home.studioTagline');
 const canonical = new URL(path, Astro.site).href;
 
-// Social preview image: reuse the home page artwork until a dedicated
-// share image (public/og-image.jpg) is added.
-const home = await sanityClient.fetch<{ homeImage?: any } | null>(
-  `*[_type == "aboutPage"][0]{ homeImage }`,
-);
-// Force JPEG: `auto('format')` serves the 1 MB source PNG to crawlers that
-// don't request WebP (WhatsApp, facebookexternalhit), blowing past WhatsApp's
-// ~300 KB preview limit so no image renders.
-const ogImage = home?.homeImage
-  ? urlFor(home.homeImage).width(1200).height(630).fit('crop').format('jpg').url()
-  : new URL('/og-image.jpg', Astro.site).href;
+// Same-origin static JPEG. WhatsApp's mobile scraper rejects the Sanity CDN
+// URL (cross-origin, query string, a `.png` path serving JPEG bytes), so the
+// preview image is served from public/og-image.jpg — a 1200x630 crop of the
+// home artwork. Regenerate that file if the home image changes.
+const ogImage = new URL('/og-image.jpg', Astro.site).href;
 ---
 <!doctype html>
 <html lang={defaultLang} dir={dirs[defaultLang]}>
