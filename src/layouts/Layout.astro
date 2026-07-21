@@ -1,6 +1,8 @@
 ---
+import { sanityClient } from 'sanity:client';
 import { defaultLang, dirs } from '../i18n/ui';
 import { useTranslations } from '../i18n/utils';
+import { urlFor } from '../utils/image';
 
 interface Props {
   title?: string;
@@ -13,6 +15,18 @@ const artistName = t('site.artist');
 const pageTitle = title ? `${title} · ${siteName}` : siteName;
 const year = new Date().getFullYear();
 const path = Astro.url.pathname;
+
+const metaDescription = t('home.studioTagline');
+const canonical = new URL(path, Astro.site).href;
+
+// Social preview image: reuse the home page artwork until a dedicated
+// share image (public/og-image.jpg) is added.
+const home = await sanityClient.fetch<{ homeImage?: any } | null>(
+  `*[_type == "aboutPage"][0]{ homeImage }`,
+);
+const ogImage = home?.homeImage
+  ? urlFor(home.homeImage).width(1200).height(630).fit('crop').auto('format').url()
+  : new URL('/og-image.jpg', Astro.site).href;
 ---
 <!doctype html>
 <html lang={defaultLang} dir={dirs[defaultLang]}>
@@ -28,6 +42,16 @@ const path = Astro.url.pathname;
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap"
       rel="stylesheet"
     />
+    <meta name="description" content={metaDescription} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
     <slot name="head" />
     <title>{pageTitle}</title>
   </head>

@@ -31,6 +31,7 @@ const separateBuildDepCache = {
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://shanitaubsagiv.com',
   output: 'static',
   vite: {
     optimizeDeps: {
