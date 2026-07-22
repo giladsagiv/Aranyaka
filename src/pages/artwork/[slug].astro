@@ -10,7 +10,7 @@ export async function getStaticPaths() {
     *[_type == "artwork" && defined(slug.current)] {
       title, image, altText, dimensions, year, medium, price, sold,
       description, extraImages, provenance, printsAvailable,
-      "slug": slug.current,
+      "slug": slug.current, "categoryId": category._ref,
       "journalSlug": journalPost->slug.current
     }
   `);
@@ -25,10 +25,12 @@ const { art } = Astro.props;
 
 const meta = [art.medium, art.year, art.dimensions].filter(Boolean).join(' · ');
 const priceLine = art.sold ? t('artwork.sold') : art.price;
+// return to the collection this piece belongs to, not the default one
+const backHref = art.categoryId ? `/gallery?category=${art.categoryId}` : '/gallery';
 ---
 <Layout title={`${art.title} · ${t('site.title')}`}>
   <main class="container">
-    <a href="/gallery" class="back">{t('artwork.back')}</a>
+    <a href={backHref} class="back">{t('artwork.back')}</a>
     <img
       src={urlFor(art.image).width(1400).auto('format').url()}
       alt={art.altText}

@@ -43,6 +43,25 @@ const seriesHeaders = categories
 ---
 <Layout title={t('nav.gallery')}>
   <main>
+    <script is:inline define:vars={{ ids: categories.map((c) => c._id) }}>
+      // Pre-paint: when deep-linked to /gallery?category=<id>, hide the other
+      // collections before first paint so the default one never flashes. The
+      // interactive script below re-applies the filter and drops this style.
+      (function () {
+        const requested = new URLSearchParams(location.search).get('category');
+        if (!requested || !ids.includes(requested)) return;
+        const style = document.createElement('style');
+        style.id = 'pre-filter';
+        style.textContent =
+          '.card:not([data-category="' + requested + '"]),' +
+          '.series:not([data-series="' + requested + '"]){display:none!important}' +
+          '.card[data-category="' + requested + '"],' +
+          '.series[data-series="' + requested + '"]{display:block!important}' +
+          '.filter-btn[data-filter="' + requested + '"]{opacity:1!important}' +
+          '.filter-btn[aria-pressed="true"]:not([data-filter="' + requested + '"]){opacity:.4!important}';
+        document.head.appendChild(style);
+      })();
+    </script>
     {categories.length > 0 && (
       <nav class="filter-nav" aria-label="Category filter">
         {categories.map((cat, i) => (
@@ -148,6 +167,9 @@ const seriesHeaders = categories
   if (requested && [...buttons].some((b) => b.dataset.filter === requested)) {
     applyFilter(requested);
   }
+  // the pre-paint style (see inline script) has done its job; drop it so its
+  // !important rules can't override interactive filtering on later clicks
+  document.getElementById('pre-filter')?.remove();
 </script>
 <style>
   main { max-width: 1080px; margin: 0 auto; }
