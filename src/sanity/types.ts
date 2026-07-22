@@ -51,6 +51,7 @@ export interface Post {
     title: string
     slug?: string
   } | null
+  galleryLinkText?: string
 }
 
 export interface ContactPage {

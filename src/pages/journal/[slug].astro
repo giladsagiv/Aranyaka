@@ -10,7 +10,7 @@ import type { Post } from '../../sanity/types';
 export async function getStaticPaths() {
   const posts = await sanityClient.fetch<Post[]>(`
     *[_type == "post" && defined(slug.current)] {
-      title, publishedAt, videoUrl, coverImage, body,
+      title, publishedAt, videoUrl, coverImage, body, galleryLinkText,
       "slug": slug.current,
       galleryLink->{ _type, _id, title, "slug": slug.current }
     }
@@ -40,13 +40,31 @@ const date = new Date(post.publishedAt).toLocaleDateString(defaultLang, {
 // pre-filtered to a category
 const gl = post.galleryLink;
 let galleryHref: string | null = null;
-let galleryLabel: string | null = null;
+let defaultLabel: string | null = null;
 if (gl?._type === 'artwork' && gl.slug) {
   galleryHref = `/artwork/${gl.slug}`;
-  galleryLabel = `View “${gl.title}” in the Gallery →`;
+  defaultLabel = `View “${gl.title}” in the Gallery →`;
 } else if (gl?._type === 'category') {
   galleryHref = `/gallery?category=${gl._id}`;
-  galleryLabel = `Explore ${gl.title} in the Gallery →`;
+  defaultLabel = `Explore ${gl.title} in the Gallery →`;
+}
+
+// the label can be a custom sentence with the clickable words wrapped in
+// [[ ]] — split it into the text before the link, the link itself, and the
+// text after. With no custom text (or no [[ ]] marker) the whole label links.
+let linkBefore = '';
+let linkText: string | null = defaultLabel;
+let linkAfter = '';
+const custom = post.galleryLinkText?.trim();
+if (custom) {
+  const marker = custom.match(/^([\s\S]*?)\[\[([\s\S]+?)\]\]([\s\S]*)$/);
+  if (marker) {
+    linkBefore = marker[1];
+    linkText = marker[2];
+    linkAfter = marker[3];
+  } else {
+    linkText = custom;
+  }
 }
 ---
 <Layout title={post.title}>
@@ -88,7 +106,7 @@ if (gl?._type === 'artwork' && gl.slug) {
 
     {galleryHref && (
       <p class="gallery-link">
-        <a href={galleryHref}>{galleryLabel}</a>
+        {linkBefore}<a href={galleryHref}>{linkText}</a>{linkAfter}
       </p>
     )}
   </main>
@@ -147,10 +165,14 @@ if (gl?._type === 'artwork' && gl.slug) {
     color: #4f4f4f;
     margin: 0 0 1.6em;
   }
-  .gallery-link { text-align: center; margin: 40px 0 0; }
-  .gallery-link a {
+  .gallery-link {
+    text-align: center;
+    margin: 40px 0 0;
     font-size: 13px;
     letter-spacing: 0.07em;
+    color: #696969;
+  }
+  .gallery-link a {
     color: #1e1e1e;
     text-decoration: none;
     border-bottom: 1px solid #d8d8d8;

@@ -76,6 +76,14 @@ export const postType = defineType({
       description:
         'Optional — adds a link from this entry to a gallery artwork or category.',
     }),
+    defineField({
+      name: 'galleryLinkText',
+      title: 'Link Text (optional)',
+      type: 'string',
+      description:
+        'Custom sentence for the gallery link. Wrap the clickable words in double brackets, e.g. “To view the finished piece, [[visit]] the gallery”. Leave empty to use the default label.',
+      hidden: ({ document }) => !document?.galleryLink,
+    }),
   ],
   preview: {
     select: { title: 'title', subtitle: 'publishedAt', media: 'coverImage' },
