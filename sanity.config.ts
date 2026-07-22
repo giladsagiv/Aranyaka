@@ -8,6 +8,14 @@ export default defineConfig({
   title: 'Personal Gallery',
   projectId: '369t4bp9',
   dataset: 'production',
+  // Sanity's new document Events API (default-on) returns "Internal error" for
+  // this project and crashes the History pane with a ChannelError. Revert to
+  // the legacy history timeline. (beta.eventsAPI.documents defaults to true.)
+  beta: {
+    eventsAPI: {
+      documents: false,
+    },
+  },
   plugins: [
     structureTool({
       structure: (S, context) =>
