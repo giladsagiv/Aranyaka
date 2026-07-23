@@ -22,7 +22,13 @@ export default defineConfig({
         S.list()
           .title('Content')
           .items([
-            // fixed singleton for the about page / site identity
+            // fixed singletons, one record per page
+            S.listItem()
+              .title('Home Page')
+              .id('homePage')
+              .child(
+                S.document().schemaType('homePage').documentId('homePage'),
+              ),
             S.listItem()
               .title('About Page')
               .id('aboutPage')

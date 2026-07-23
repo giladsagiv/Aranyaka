@@ -7,34 +7,6 @@ export const aboutPageType = defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'artistName',
-      title: 'Artist Name',
-      type: 'string',
-      description: 'Shown large on the home page.',
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'tagline',
-      title: 'Tagline',
-      type: 'string',
-      description: 'One line shown under the name on the home page.',
-    }),
-    defineField({
-      name: 'homeImage',
-      title: 'Home Page Image',
-      type: 'image',
-      options: { hotspot: true },
-      description: 'Shown beside the name on the home page.',
-      fields: [
-        defineField({
-          name: 'altText',
-          title: 'Alt Text',
-          type: 'string',
-          description: 'Describe the image for visually impaired visitors.',
-        }),
-      ],
-    }),
-    defineField({
       name: 'openingQuote',
       title: 'Opening Quote',
       type: 'text',

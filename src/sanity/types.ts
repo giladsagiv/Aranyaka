@@ -27,14 +27,18 @@ export interface Category {
   statement?: string
 }
 
-export interface AboutPage {
+export interface HomePage {
   artistName?: string
-  tagline?: string
+  studioName?: string
+  studioTagline?: string
+  homeImage?: { altText?: string } & Record<string, any>
+}
+
+export interface AboutPage {
   openingQuote?: string
   quoteAttribution?: string
   body?: string
   cvUrl?: string
-  homeImage?: { altText?: string } & Record<string, any>
 }
 
 export interface Post {

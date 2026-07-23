@@ -9,7 +9,7 @@ export async function getStaticPaths() {
   const artworks = await sanityClient.fetch<Artwork[]>(`
     *[_type == "artwork" && defined(slug.current)] {
       title, image, altText, dimensions, year, medium, price, sold,
-      description, extraImages, provenance, printsAvailable,
+      description, "extraImages": extraImages[defined(asset)], provenance, printsAvailable,
       "slug": slug.current, "categoryId": category._ref,
       "journalSlug": journalPost->slug.current
     }

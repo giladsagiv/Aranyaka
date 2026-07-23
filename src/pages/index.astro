@@ -3,32 +3,32 @@ import Layout from '../layouts/Layout.astro';
 import { sanityClient } from 'sanity:client';
 import { urlFor } from '../utils/image';
 import { useTranslations } from '../i18n/utils';
-import type { AboutPage } from '../sanity/types';
+import type { HomePage } from '../sanity/types';
 
 const t = useTranslations();
 
-const about: AboutPage | null = await sanityClient.fetch(`
-  *[_type == "aboutPage"][0] { artistName, homeImage }
+const home: HomePage | null = await sanityClient.fetch(`
+  *[_type == "homePage"][0] { artistName, studioName, studioTagline, homeImage }
 `);
 ---
-<Layout title={about?.artistName}>
-  <main class:list={['hero', { 'has-image': !!about?.homeImage }]}>
-    {about?.homeImage && (
+<Layout title={home?.artistName}>
+  <main class:list={['hero', { 'has-image': !!home?.homeImage }]}>
+    {home?.homeImage && (
       <img
         class="hero-image"
-        src={urlFor(about.homeImage).width(900).auto('format').url()}
-        srcset={`${urlFor(about.homeImage).width(600).auto('format').url()} 600w,
-                 ${urlFor(about.homeImage).width(900).auto('format').url()} 900w,
-                 ${urlFor(about.homeImage).width(1200).auto('format').url()} 1200w`}
+        src={urlFor(home.homeImage).width(900).auto('format').url()}
+        srcset={`${urlFor(home.homeImage).width(600).auto('format').url()} 600w,
+                 ${urlFor(home.homeImage).width(900).auto('format').url()} 900w,
+                 ${urlFor(home.homeImage).width(1200).auto('format').url()} 1200w`}
         sizes="(max-width: 768px) 100vw, 50vw"
-        alt={about.homeImage.altText || about?.artistName || ''}
+        alt={home.homeImage.altText || home?.artistName || ''}
         decoding="async"
       />
     )}
     <div class="intro">
-      {about?.artistName && <h1 class="sr-only">{about.artistName}</h1>}
-      <p class="studio-label">{t('home.studio')}</p>
-      <p class="studio-tagline">{t('home.studioTagline')}</p>
+      {home?.artistName && <h1 class="sr-only">{home.artistName}</h1>}
+      <p class="studio-label">{home?.studioName || t('home.studio')}</p>
+      <p class="studio-tagline">{home?.studioTagline || t('home.studioTagline')}</p>
     </div>
   </main>
 </Layout>
