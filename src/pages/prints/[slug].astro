@@ -1,0 +1,307 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { sanityClient } from 'sanity:client';
+import { urlFor } from '../../utils/image';
+import { useTranslations } from '../../i18n/utils';
+import type { Artwork, PrintsPage, PrintSize } from '../../sanity/types';
+
+export async function getStaticPaths() {
+  // one page per artwork with "Fine Art Prints available" ticked; the shared
+  // subtitle / size table / details box are fetched once and passed to each
+  const [prints, page, contact] = await Promise.all([
+    sanityClient.fetch<Artwork[]>(`
+      *[_type == "artwork" && printsAvailable == true && defined(slug.current)] | order(orderRank) {
+        title, image, altText, "slug": slug.current,
+        printSizes[]{ label, dimensions, price }
+      }
+    `),
+    sanityClient.fetch<PrintsPage | null>(`
+      *[_type == "printsPage"][0] {
+        printSubtitle,
+        sizes[]{ label, dimensions, price },
+        details[]{ label, text }
+      }
+    `),
+    sanityClient.fetch<{ email?: string } | null>(`
+      *[_type == "contactPage"][0] { email }
+    `),
+  ]);
+  return prints.map((art) => ({
+    params: { slug: art.slug },
+    props: { art, page, contact },
+  }));
+}
+
+const t = useTranslations();
+const { art, page, contact } = Astro.props;
+
+const email = contact?.email || '';
+const globalSizes: PrintSize[] = page?.sizes || [];
+// per-artwork sizes override the global table when present
+const sizes =
+  art.printSizes && art.printSizes.length > 0 ? art.printSizes : globalSizes;
+
+// email templates live in i18n; {title}/{size} are filled per chosen size
+const subjectTpl = t('prints.mailSubject');
+const bodyTpl = t('prints.mailBody');
+
+const sizeText = (s: PrintSize) => {
+  const dims = s.dimensions ? ` (${s.dimensions})` : '';
+  const price = s.price ? ` – ${s.price}` : '';
+  return `${s.label}${dims}${price}`;
+};
+
+// a ready-made mailto for one chosen size; the client script swaps the order
+// button's href to the selected size's prebuilt link
+const mailtoFor = (title: string, size: string) => {
+  const subject = subjectTpl.replace('{title}', title);
+  const body = bodyTpl.replace('{title}', title).replace('{size}', size);
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
+
+const firstSize = sizes[0] ? sizeText(sizes[0]) : '';
+const base = urlFor(art.image).auto('format');
+---
+<Layout title={`${art.title} · ${t('nav.prints')}`}>
+  <main class="container">
+    <a href="/prints" class="back">{t('prints.back')}</a>
+    <div class="print-detail">
+      <div class="print-detail__media">
+        <img
+          src={base.width(900).url()}
+          srcset={`${base.width(600).url()} 600w,
+                   ${base.width(900).url()} 900w,
+                   ${base.width(1200).url()} 1200w`}
+          sizes="(max-width: 640px) 100vw, 620px"
+          alt={art.altText}
+          decoding="async"
+        />
+      </div>
+      <h1 class="print-detail__title">{art.title}</h1>
+      {page?.printSubtitle && (
+        <p class="print-detail__subtitle">{page.printSubtitle}</p>
+      )}
+      <div class="buy">
+        {sizes.length > 0 && (
+          <div class="buy__sizes">
+            <fieldset class="sizes">
+              <legend>{t('prints.selectSize')}</legend>
+              {sizes.map((s, j) => {
+                const label = sizeText(s);
+                return (
+                  <label class="size">
+                    <input
+                      type="radio"
+                      name="size"
+                      value={label}
+                      checked={j === 0}
+                      data-mailto={mailtoFor(art.title, label)}
+                    />
+                    <span>{label}</span>
+                  </label>
+                );
+              })}
+            </fieldset>
+          </div>
+        )}
+        <div class="buy__order">
+          <a class="order" href={mailtoFor(art.title, firstSize)}>
+            {t('prints.order')}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {page?.details && page.details.length > 0 && (
+      <details class="details" open>
+        <summary class="details__heading">{t('prints.detailsHeading')}</summary>
+        <dl class="details__list">
+          {page.details.map((d) => (
+            <div class="details__row">
+              <dt>{d.label}</dt>
+              {d.text && <dd>{d.text}</dd>}
+            </div>
+          ))}
+        </dl>
+      </details>
+    )}
+  </main>
+</Layout>
+<script>
+  // the size radios carry a prebuilt mailto; picking one updates the order
+  // button so the email always names the selected size
+  const link = document.querySelector<HTMLAnchorElement>('.order');
+  document.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      if (radio.dataset.mailto && link) link.href = radio.dataset.mailto;
+    });
+  });
+</script>
+<style>
+  .container { max-width: 900px; margin: 0 auto; }
+  .back {
+    display: inline-block;
+    margin-bottom: 32px;
+    font-size: 14px;
+    color: #696969;
+    text-decoration: none;
+  }
+  .back:hover { color: #1e1e1e; }
+
+  .print-detail {
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .print-detail__media img {
+    width: 100%;
+    height: auto;
+    display: block;
+    background-color: #f4f4f4;
+  }
+  .print-detail__title {
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #1e1e1e;
+    margin: 26px 0 4px;
+  }
+  .print-detail__subtitle {
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: #8a8a8a;
+    margin: 0 0 22px;
+  }
+
+  /* select-size + order share the row, each taking half the width */
+  .buy {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 32px;
+  }
+  .buy__sizes { flex: 1; text-align: center; }
+  .buy__order { flex: 1; text-align: center; }
+
+  /* size picker */
+  .sizes {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+    text-align: left;
+  }
+  .sizes legend {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #9a9a9a;
+    margin: 0 0 10px;
+    padding: 0;
+  }
+  .size {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    font-weight: 300;
+    color: #555;
+    cursor: pointer;
+    margin: 0 0 7px;
+  }
+  .size input { accent-color: #1e1e1e; margin: 0; }
+
+  /* order button */
+  .order {
+    display: inline-block;
+    margin-top: 0;
+    padding: 10px 24px;
+    font-size: 11.5px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    text-decoration: none;
+    border: 1px solid #cfcac2;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  }
+  .order:hover {
+    border-color: #1e1e1e;
+    background-color: #1e1e1e;
+    color: #ffffff;
+  }
+
+  /* details & shipping — cream bands split by thin white lines */
+  .details {
+    max-width: 880px;
+    margin: 72px auto 0;
+    background-color: #ffffff;
+  }
+  .details__heading {
+    position: relative;
+    text-align: center;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    margin: 0;
+    padding: 34px 28px;
+    background-color: #faf9f7;
+    cursor: pointer;
+    list-style: none;
+  }
+  .details__heading::-webkit-details-marker { display: none; }
+  .details__heading::after {
+    content: '+';
+    position: absolute;
+    right: 26px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    line-height: 1;
+    color: #1e1e1e;
+  }
+  .details[open] .details__heading::after { content: '\2212'; }
+  .details__list {
+    margin: 4px 0 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+  /* the explicit display:grid above overrides the native collapse, so
+     re-hide the panel when the accordion is closed */
+  .details:not([open]) .details__list { display: none; }
+  .details__row {
+    margin: 0;
+    padding: 28px 20px;
+    background-color: #faf9f7;
+  }
+  .details__row dt {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1e1e1e;
+    margin: 0 0 4px;
+  }
+  .details__row dd {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: #5a5a5a;
+  }
+
+  @media (max-width: 760px) {
+    .details__list { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .buy { flex-direction: column; gap: 22px; }
+    .details__list { grid-template-columns: 1fr; }
+  }
+</style>

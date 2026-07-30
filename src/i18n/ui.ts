@@ -23,6 +23,7 @@ export const ui = {
     'contact.instagram': 'Instagram',
     'artwork.back': '← Back to collection',
     'artwork.sold': 'Sold',
+    'prints.back': '← Back to Prints',
     'prints.selectSize': 'Select Size',
     'prints.order': 'Order via Email',
     'prints.detailsHeading': 'Details & Shipping',
