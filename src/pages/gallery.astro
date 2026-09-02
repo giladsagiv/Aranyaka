@@ -21,7 +21,7 @@ const activeFilter =
 
 // one flat grid in the global artwork drag-order
 const artworks: Artwork[] = await sanityClient.fetch(`
-  *[_type == "artwork"] | order(orderRank) {
+  *[_type == "artwork" && hideFromGallery != true] | order(orderRank) {
     title, image, altText, medium, provenance, printsAvailable,
     "slug": slug.current, "categoryId": category._ref
   }

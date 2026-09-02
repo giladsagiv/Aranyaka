@@ -11,6 +11,7 @@ export interface Artwork {
   description?: string
   extraImages?: Array<{ altText?: string } & Record<string, any>>
   categoryId?: string
+  hideFromGallery?: boolean
   provenance?: string
   printsAvailable?: boolean
   printSizes?: PrintSize[]

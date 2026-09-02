@@ -35,6 +35,14 @@ export const artworkType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'hideFromGallery',
+      title: 'Hide from gallery',
+      type: 'boolean',
+      description:
+        'Keeps this piece off the gallery grid. It still gets its own page and can be linked directly.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'image',
       title: 'Image',
       type: 'image',
