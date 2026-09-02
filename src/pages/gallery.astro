@@ -245,8 +245,11 @@ const seriesHeaders = categories
   .card__frame { position: relative; }
   .card__media { display: block; text-decoration: none; }
   .card__media img {
-    width: 100%;
+    width: auto;
     height: auto; /* natural proportions; show the whole artwork uncropped */
+    max-width: 100%;
+    max-height: 520px; /* cap very tall pieces (e.g. scrolls) so they don't dominate the grid */
+    margin: 0 auto; /* pieces narrowed by the height cap stay centred in the cell */
     display: block;
     background-color: #f4f4f4;
   }

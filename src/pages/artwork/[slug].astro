@@ -27,15 +27,20 @@ const meta = [art.medium, art.year, art.dimensions].filter(Boolean).join(' · ')
 const priceLine = art.sold ? t('artwork.sold') : art.price;
 // return to the collection this piece belongs to, not the default one
 const backHref = art.categoryId ? `/gallery?category=${art.categoryId}` : '/gallery';
+// Single-image pieces are sized to fit one screen (no scroll). Pieces with
+// extra images below scroll naturally, so they opt out of the fit-to-viewport.
+const hasExtra = Boolean(art.extraImages && art.extraImages.length > 0);
 ---
 <Layout title={`${art.title} · ${t('site.title')}`}>
-  <main class="container">
+  <main class:list={['container', 'artwork-page', { single: !hasExtra }]}>
     <a href={backHref} class="back">{t('artwork.back')}</a>
-    <img
-      src={urlFor(art.image).width(1400).auto('format').url()}
-      alt={art.altText}
-      decoding="async"
-    />
+    <div class="stage">
+      <img
+        src={urlFor(art.image).width(1400).auto('format').url()}
+        alt={art.altText}
+        decoding="async"
+      />
+    </div>
     <div class="info">
       <h1>{art.title}</h1>
       {meta && <p class="meta">{meta}</p>}
@@ -65,6 +70,22 @@ const backHref = art.categoryId ? `/gallery?category=${art.categoryId}` : '/gall
 </Layout>
 <style>
   .container { max-width: 900px; margin: 0 auto; }
+  /* Single-image pieces: make the whole viewport a flex column so the artwork
+     fills exactly the space left over by the header, back link, caption and
+     footer. This has no fixed "magic number" to subtract, so it fits on any
+     viewport height — including tall ones like an iPad where a hardcoded
+     offset left the footer overflowing below the fold. */
+  :global(body:has(.artwork-page.single)) {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh; /* definite height so the stage can shrink to fit within it */
+  }
+  .artwork-page.single {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* allow the stage below to shrink instead of overflowing */
+  }
   .back {
     display: inline-block;
     margin-bottom: 32px;
@@ -73,8 +94,29 @@ const backHref = art.categoryId ? `/gallery?category=${art.categoryId}` : '/gall
     text-decoration: none;
   }
   .back:hover { color: #1e1e1e; }
-  img { width: 100%; height: auto; display: block; background-color: #f4f4f4; }
-  .info { text-align: center; margin-top: 28px; }
+  .stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* The stage absorbs the leftover height (flex-basis 0 so it takes only what
+     is left, not the image's natural size); the image scales to fit inside it,
+     so tall/portrait pieces never push the page taller. */
+  .artwork-page.single .stage {
+    flex: 1;
+    min-height: 0;
+  }
+  .stage img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    display: block;
+    background-color: #f4f4f4;
+  }
+  /* Multi-image pieces scroll, so cap the lead image near one screen instead. */
+  .artwork-page:not(.single) .stage img { max-height: 80dvh; }
+  .info { text-align: center; margin-top: 28px; flex: 0 0 auto; }
   h1 {
     font-size: 21px;
     font-weight: 400;
