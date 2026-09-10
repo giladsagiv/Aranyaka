@@ -120,8 +120,9 @@ const ogImage = new URL('/og-image.jpg', Astro.site).href;
   }
   .site-nav {
     display: flex;
+    flex-wrap: wrap; /* wrap to a second row on narrow screens instead of clipping */
     justify-content: center;
-    gap: 36px;
+    gap: 14px 36px; /* row-gap applies once wrapped; column-gap unchanged on desktop */
     margin: 28px 0 44px;
   }
   .site-nav a {
