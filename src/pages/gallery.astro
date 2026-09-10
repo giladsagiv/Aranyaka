@@ -19,26 +19,56 @@ const categories: Category[] = await sanityClient.fetch(`
 const activeFilter =
   categories.find((cat) => cat.isDefault)?._id ?? categories[0]?._id ?? null;
 
-// one flat grid in the global artwork drag-order
-const artworks: Artwork[] = await sanityClient.fetch(`
+// one flat grid in the global artwork drag-order. aspectRatio (width/height)
+// drives the justified layout below.
+const artworks: (Artwork & { aspect?: number })[] = await sanityClient.fetch(`
   *[_type == "artwork" && hideFromGallery != true] | order(orderRank) {
     title, image, altText, medium, provenance, printsAvailable,
-    "slug": slug.current, "categoryId": category._ref
+    "slug": slug.current, "categoryId": category._ref,
+    "aspect": image.asset->metadata.dimensions.aspectRatio
   }
 `);
 
-// per-category series header shown above the grid; swaps with the active filter
-const seriesHeaders = categories
-  .filter((cat) => cat.seriesTitle || cat.statement)
-  .map((cat) => ({
-    id: cat._id,
-    title: cat.seriesTitle,
-    subtitle: cat.seriesSubtitle,
-    statement: (cat.statement || '')
-      .split(/\n\s*\n/)
-      .map((p) => p.trim())
-      .filter(Boolean),
-  }));
+// Justified rows (Flickr / Google-Photos style): each row is scaled to one
+// width, so every piece in a row shares a single height and the row fills its
+// width edge-to-edge — no crop, no gaps, whatever the mix of orientations. Row
+// membership is decided here from each image's aspect ratio; flexbox then
+// re-justifies each row to the real screen width with no client JS.
+const TARGET_H = 280; // desired row height (px) at the reference width
+const GAP = 16; // gap between pieces in a row (px)
+const REF_W = 1080; // reference container width the rows are packed against
+
+type RowItem = Artwork & { aspect?: number; a: number };
+type Row = { items: RowItem[]; last: boolean };
+function justifiedRows(items: (Artwork & { aspect?: number })[]): Row[] {
+  const rows: Row[] = [];
+  let cur: RowItem[] = [];
+  let aspectSum = 0;
+  for (const it of items) {
+    const a = typeof it.aspect === 'number' && it.aspect > 0 ? it.aspect : 1;
+    cur.push({ ...it, a });
+    aspectSum += a;
+    // the width this row would occupy laid out at the target height
+    const rowW = aspectSum * TARGET_H + GAP * (cur.length - 1);
+    if (rowW >= REF_W) {
+      rows.push({ items: cur, last: false });
+      cur = [];
+      aspectSum = 0;
+    }
+  }
+  if (cur.length) rows.push({ items: cur, last: true });
+  return rows;
+}
+
+// group the flat drag-ordered list by category; the gallery shows one at a time
+const galleryCats = categories.map((cat) => ({
+  cat,
+  rows: justifiedRows(artworks.filter((art) => art.categoryId === cat._id)),
+  statement: (cat.statement || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean),
+}));
 ---
 <Layout title={t('nav.gallery')}>
   <main>
@@ -52,10 +82,8 @@ const seriesHeaders = categories
         const style = document.createElement('style');
         style.id = 'pre-filter';
         style.textContent =
-          '.card:not([data-category="' + requested + '"]),' +
-          '.series:not([data-series="' + requested + '"]){display:none!important}' +
-          '.card[data-category="' + requested + '"],' +
-          '.series[data-series="' + requested + '"]{display:block!important}' +
+          '.cat:not([data-category="' + requested + '"]){display:none!important}' +
+          '.cat[data-category="' + requested + '"]{display:block!important}' +
           '.filter-btn[data-filter="' + requested + '"]{opacity:1!important}' +
           '.filter-btn[aria-pressed="true"]:not([data-filter="' + requested + '"]){opacity:.4!important}';
         document.head.appendChild(style);
@@ -78,77 +106,69 @@ const seriesHeaders = categories
       </nav>
     )}
 
-    {seriesHeaders.map((s) => (
-      <header
-        class="series"
-        data-series={s.id}
-        style={activeFilter && s.id !== activeFilter ? 'display: none' : undefined}
+    {galleryCats.map(({ cat, rows, statement }) => (
+      <section
+        class="cat"
+        data-category={cat._id}
+        style={activeFilter && cat._id !== activeFilter ? 'display: none' : undefined}
       >
-        {s.title && <h1 class="series__title">{s.title}</h1>}
-        {s.subtitle && <p class="series__subtitle">{s.subtitle}</p>}
-        {s.statement.length > 0 && (
-          <div class="series__statement">
-            {s.statement.map((p) => <p>{p}</p>)}
-          </div>
-        )}
-      </header>
-    ))}
-
-    <div class="gallery-grid">
-      {artworks.map((art) => {
-        const base = urlFor(art.image).auto('format');
-        return (
-          <article
-            class="card"
-            data-category={art.categoryId}
-            style={activeFilter && art.categoryId !== activeFilter
-              ? 'display: none'
-              : undefined}
-          >
-            <div class="card__frame">
-              <a class="card__media" href={`/artwork/${art.slug}`}>
-                <img
-                  src={base.width(600).url()}
-                  srcset={`${base.width(400).url()} 400w,
-                           ${base.width(600).url()} 600w,
-                           ${base.width(800).url()} 800w`}
-                  sizes="(max-width: 640px) 100vw,
-                         (max-width: 1024px) 50vw, 33vw"
-                  alt={art.altText}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </a>
-              <div class="card__overlay">
-                <p class="card__title">{art.title}</p>
-                {art.medium && <p class="card__line">{art.medium}</p>}
-                {art.provenance && <p class="card__line">{art.provenance}</p>}
-                {art.printsAvailable && (
-                  <p class="card__line card__prints">Fine Art Prints available</p>
-                )}
+        {(cat.seriesTitle || statement.length > 0) && (
+          <header class="series">
+            {cat.seriesTitle && <h1 class="series__title">{cat.seriesTitle}</h1>}
+            {cat.seriesSubtitle && <p class="series__subtitle">{cat.seriesSubtitle}</p>}
+            {statement.length > 0 && (
+              <div class="series__statement">
+                {statement.map((p) => <p>{p}</p>)}
               </div>
+            )}
+          </header>
+        )}
+        <div class="gallery">
+          {rows.map((row) => (
+            <div class:list={['jrow', { 'jrow--last': row.last }]}>
+              {row.items.map((art) => {
+                const base = urlFor(art.image).auto('format');
+                return (
+                  <a class="jitem" style={`--a: ${art.a}`} href={`/artwork/${art.slug}`}>
+                    <img
+                      src={base.width(800).url()}
+                      srcset={`${base.width(400).url()} 400w,
+                               ${base.width(600).url()} 600w,
+                               ${base.width(900).url()} 900w`}
+                      sizes="(max-width: 640px) 100vw, 45vw"
+                      alt={art.altText}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div class="card__overlay">
+                      <p class="card__title">{art.title}</p>
+                      {art.medium && <p class="card__line">{art.medium}</p>}
+                      {art.provenance && <p class="card__line">{art.provenance}</p>}
+                      {art.printsAvailable && (
+                        <p class="card__line card__prints">Fine Art Prints available</p>
+                      )}
+                    </div>
+                    <p class="card__caption">{art.title}</p>
+                  </a>
+                );
+              })}
             </div>
-            <p class="card__caption">{art.title}</p>
-          </article>
-        );
-      })}
-    </div>
+          ))}
+        </div>
+      </section>
+    ))}
   </main>
 </Layout>
 <script>
   const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
-  const cards = document.querySelectorAll<HTMLElement>('.gallery-grid .card');
-  const headers = document.querySelectorAll<HTMLElement>('.series');
+  const sections = document.querySelectorAll<HTMLElement>('.cat');
 
   function applyFilter(filter: string | undefined) {
     buttons.forEach((b) =>
       b.setAttribute('aria-pressed', String(b.dataset.filter === filter))
     );
-    cards.forEach((card) => {
-      card.style.display = card.dataset.category === filter ? '' : 'none';
-    });
-    headers.forEach((h) => {
-      h.style.display = h.dataset.series === filter ? '' : 'none';
+    sections.forEach((s) => {
+      s.style.display = s.dataset.category === filter ? '' : 'none';
     });
   }
 
@@ -235,24 +255,38 @@ const seriesHeaders = categories
     margin: 0 0 1em;
   }
   .series__statement p:last-child { margin-bottom: 0; }
-  /* grid */
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 36px 20px;
+  /* justified gallery: rows of one shared height, filled edge-to-edge */
+  .jrow {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
   }
-  .card { color: inherit; }
-  .card__frame { position: relative; }
-  .card__media { display: block; text-decoration: none; }
-  .card__media img {
-    width: auto;
-    height: auto; /* natural proportions; show the whole artwork uncropped */
-    max-width: 100%;
-    max-height: 520px; /* cap very tall pieces (e.g. scrolls) so they don't dominate the grid */
-    margin: 0 auto; /* pieces narrowed by the height cap stay centred in the cell */
+  .jrow:last-child { margin-bottom: 0; }
+  /* each piece grows in proportion to its aspect ratio (--a), so every piece in
+     the row resolves to the same height and the row fills the full width — the
+     whole artwork shows, uncropped and undistorted */
+  .jitem {
+    position: relative;
+    flex-grow: var(--a);
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
     display: block;
-    background-color: #f4f4f4;
+    text-decoration: none;
+    color: inherit;
+    background-color: #f4f3f0; /* placeholder while the image loads */
   }
+  .jitem img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  /* a short final row sits at the target height, left-aligned, rather than being
+     stretched full-width (which would blow up its one or two pieces) */
+  .jrow--last { justify-content: flex-start; }
+  .jrow--last .jitem { flex-grow: 0; }
+  .jrow--last .jitem img { width: auto; height: 280px; }
   /* catalog spec: revealed over the image on hover/focus (desktop) */
   .card__overlay {
     position: absolute;
@@ -269,8 +303,8 @@ const seriesHeaders = categories
     transition: opacity 0.3s ease;
     pointer-events: none; /* clicks fall through to the image link beneath */
   }
-  .card__frame:hover .card__overlay,
-  .card__frame:focus-within .card__overlay {
+  .jitem:hover .card__overlay,
+  .jitem:focus-within .card__overlay {
     opacity: 1;
   }
   .card__title {
@@ -298,8 +332,15 @@ const seriesHeaders = categories
     text-align: center;
     margin: 10px 0 0;
   }
-  /* touch / narrow screens have no hover: show a caption, tap opens the page */
+  /* touch / narrow screens have no hover: stack full-width, show a caption */
   @media (max-width: 640px) {
+    .jrow, .jrow--last {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 24px;
+    }
+    .jitem { flex-grow: 0; width: 100%; }
+    .jitem img, .jrow--last .jitem img { width: 100%; height: auto; }
     .card__overlay { display: none; }
     .card__caption { display: block; }
   }
