@@ -88,10 +88,19 @@ const hasExtra = Boolean(art.extraImages && art.extraImages.length > 0);
     max-width: 1200px; /* let wide pieces grow past the 900px text column */
     position: relative; /* anchor the overlaid back link */
   }
-  /* The compact header/nav is the site-wide default now, so the fit-to-screen
-     layout only has to drop the remaining scroll-page spacing (the gap under
-     the nav and above the footer) to give the artwork the whole screen. */
-  :global(body:has(.artwork-page.single) .site-nav) { margin-bottom: 14px; }
+  /* On the fit-to-screen layout the surrounding chrome is sized for normal
+     scrolling pages. Shrink the header/nav and drop the footer's scroll-page
+     spacing so nearly the whole screen is the artwork itself. */
+  :global(body:has(.artwork-page.single) .site-header) { padding-top: 16px; }
+  :global(body:has(.artwork-page.single) .brand-name) {
+    font-size: 16px;
+    letter-spacing: 0.18em;
+  }
+  :global(body:has(.artwork-page.single) .site-nav) {
+    gap: 14px 24px;
+    margin: 12px 0 14px;
+  }
+  :global(body:has(.artwork-page.single) .site-nav a) { font-size: 13px; }
   :global(body:has(.artwork-page.single) .site-footer) { margin-top: 0; padding: 10px 0; }
   /* Back link overlays the top-left corner of the artwork instead of taking
      its own row. The translucent chip keeps it legible over any image. */

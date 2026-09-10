@@ -103,7 +103,7 @@ const ogImage = new URL('/og-image.jpg', Astro.site).href;
   }
   .site-header {
     text-align: center;
-    padding: 16px 0 0;
+    padding: 56px 0 0;
   }
   .brand {
     display: inline-block;
@@ -111,9 +111,9 @@ const ogImage = new URL('/og-image.jpg', Astro.site).href;
   }
   .brand-name {
     display: block;
-    font-size: 16px;
+    font-size: clamp(22px, 5vw, 32px);
     font-weight: 300;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: #1e1e1e;
     line-height: 1.1;
@@ -122,11 +122,11 @@ const ogImage = new URL('/og-image.jpg', Astro.site).href;
     display: flex;
     flex-wrap: wrap; /* wrap to a second row on narrow screens instead of clipping */
     justify-content: center;
-    gap: 14px 24px; /* row-gap applies once wrapped */
-    margin: 12px 0 28px;
+    gap: 14px 36px; /* row-gap applies once wrapped; column-gap unchanged on desktop */
+    margin: 28px 0 44px;
   }
   .site-nav a {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
     letter-spacing: 0.06em;
     color: #444;
