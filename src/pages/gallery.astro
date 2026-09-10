@@ -285,8 +285,9 @@ const galleryCats = categories.map((cat) => ({
   /* a short final row sits at the target height, left-aligned, rather than being
      stretched full-width (which would blow up its one or two pieces) */
   .jrow--last { justify-content: flex-start; }
-  .jrow--last .jitem { flex-grow: 0; }
-  .jrow--last .jitem img { width: auto; height: 280px; }
+  /* its items are sized by the item box, not the img, so the hover overlay —
+     which is pinned to that box — still covers the whole piece */
+  .jrow--last .jitem { flex-grow: 0; flex-basis: calc(var(--a) * 280px); }
   /* catalog spec: revealed over the image on hover/focus (desktop) */
   .card__overlay {
     position: absolute;
@@ -339,8 +340,7 @@ const galleryCats = categories.map((cat) => ({
       align-items: stretch;
       gap: 24px;
     }
-    .jitem { flex-grow: 0; width: 100%; }
-    .jitem img, .jrow--last .jitem img { width: 100%; height: auto; }
+    .jitem { flex-grow: 0; flex-basis: auto; width: 100%; }
     .card__overlay { display: none; }
     .card__caption { display: block; }
   }
