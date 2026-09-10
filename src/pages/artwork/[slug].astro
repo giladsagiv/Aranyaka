@@ -92,7 +92,7 @@ const hasExtra = Boolean(art.extraImages && art.extraImages.length > 0);
      layout only has to drop the remaining scroll-page spacing (the gap under
      the nav and above the footer) to give the artwork the whole screen. */
   :global(body:has(.artwork-page.single) .site-nav) { margin-bottom: 14px; }
-  :global(body:has(.artwork-page.single) .site-footer) { margin-top: 0; padding: 20px 0; }
+  :global(body:has(.artwork-page.single) .site-footer) { margin-top: 0; padding: 10px 0; }
   /* Back link overlays the top-left corner of the artwork instead of taking
      its own row. The translucent chip keeps it legible over any image. */
   .artwork-page.single .back {
@@ -105,7 +105,14 @@ const hasExtra = Boolean(art.extraImages && art.extraImages.length > 0);
     background: rgba(255, 255, 255, 0.8);
     border-radius: 4px;
   }
-  .artwork-page.single .info { margin-top: 18px; }
+  /* Fit-to-screen pieces trade caption airiness for artwork height, so the
+     title block sits tighter here than on the scrolling multi-image pages. */
+  .artwork-page.single .info { margin-top: 10px; }
+  .artwork-page.single h1 { margin-bottom: 3px; }
+  .artwork-page.single .meta { margin-bottom: 2px; }
+  .artwork-page.single .provenance { margin-top: 3px; }
+  .artwork-page.single .prints { margin-top: 4px; }
+  .artwork-page.single .journal-link { margin-top: 12px; }
   .back {
     display: inline-block;
     margin-bottom: 32px;
