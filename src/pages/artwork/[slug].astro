@@ -36,7 +36,7 @@ const hasExtra = Boolean(art.extraImages && art.extraImages.length > 0);
     <a href={backHref} class="back">{t('artwork.back')}</a>
     <div class="stage">
       <img
-        src={urlFor(art.image).width(1400).auto('format').url()}
+        src={urlFor(art.image).width(2000).auto('format').url()}
         alt={art.altText}
         decoding="async"
       />
@@ -85,7 +85,16 @@ const hasExtra = Boolean(art.extraImages && art.extraImages.length > 0);
     display: flex;
     flex-direction: column;
     min-height: 0; /* allow the stage below to shrink instead of overflowing */
+    max-width: 1200px; /* let wide pieces grow past the 900px text column */
   }
+  /* On the fit-to-screen layout the surrounding chrome is sized for normal
+     scrolling pages (a tall header, a 96px gap above the footer). Collapse that
+     spacing here so the artwork claims the maximum height one screen allows. */
+  :global(body:has(.artwork-page.single) .site-header) { padding-top: 28px; }
+  :global(body:has(.artwork-page.single) .site-nav) { margin-bottom: 24px; }
+  :global(body:has(.artwork-page.single) .site-footer) { margin-top: 0; padding: 20px 0; }
+  .artwork-page.single .back { margin-bottom: 16px; }
+  .artwork-page.single .info { margin-top: 18px; }
   .back {
     display: inline-block;
     margin-bottom: 32px;
