@@ -3,9 +3,9 @@
 // 2. enable Astro's i18n routing in astro.config.mjs (locales + defaultLocale)
 export const ui = {
   en: {
-    'site.title': 'Aranyaka',
+    'site.title': 'Red Thread',
     'site.artist': 'Shani Taub Sagiv',
-    'home.studio': 'Aranyaka Studio',
+    'home.studio': 'Red Thread Studio',
     'home.studioTagline': 'The path of the brush: navigating mind through form, color, and the empty spaces in between',
     'nav.home': 'Home',
     'nav.gallery': 'Gallery',
@@ -17,7 +17,7 @@ export const ui = {
     'journal.back': '← Back to Journal',
     'journal.empty': 'Nothing here yet.',
     'journal.watch': 'Watch the video',
-    'journal.title': 'Aranyaka Journal',
+    'journal.title': 'Red Thread Journal',
     'journal.subtitle': 'Notes on practice, mind, and the path of the brush',
     'about.cv': 'Download PDF CV',
     'contact.instagram': 'Instagram',
